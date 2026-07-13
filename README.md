@@ -1,26 +1,30 @@
 # Save Conversation
 
-Save Conversation is a Codex / Claude Code skill for turning useful AI conversations into a personal knowledge base.
+Language: [中文](#中文) | [English](#english)
 
-It supports two main workflows:
+## 中文
 
-- **Quick save**: type `save` to archive the current conversation.
-- **Memory dashboard**: type `统计看板` to review saved conversation statistics.
+Save Conversation 是一个 Codex / Claude Code Skill，用来把有价值的 AI 对话沉淀成个人知识库。
 
-The skill does not assume a default storage path. Each user must configure their own knowledge-base root directory before saving or generating statistics.
+它支持两种主要工作流：
 
-## What It Does
+- **快捷保存**：输入 `save`，归档当前对话。
+- **统计看板**：输入 `统计看板`，查看已保存记忆的统计信息。
 
-Save Conversation helps you build a lightweight LLM wiki from your AI collaboration history:
+这个 Skill 不内置任何默认存储路径。每个用户都需要先配置自己的知识库根目录，然后才能保存或生成统计。
 
-- Reconstructs the current conversation into a structured Markdown memory document.
-- Routes global knowledge to `raw/general/`.
-- Routes project-specific conversations to `raw/{project-name}/`.
-- Appends same-project same-day updates to the existing daily document instead of creating many fragmented files.
-- Generates a statistics dashboard from saved raw memories.
-- Keeps deterministic filesystem work in `scripts/memory_store.py`, while the AI handles summarization and knowledge extraction.
+### 功能
 
-## Repository Structure
+Save Conversation 可以帮助你把 AI 协作记录变成一个轻量的 LLM Wiki：
+
+- 将当前对话重建成结构化 Markdown 记忆文档。
+- 将全局知识保存到 `raw/general/`。
+- 将项目相关对话保存到 `raw/{project-name}/`。
+- 同一项目同一天的后续内容会追加到当天文档，避免生成很多碎片文件。
+- 从已有 raw 记忆中生成统计看板。
+- 将确定性的文件系统逻辑封装在 `scripts/memory_store.py`，AI 负责总结和知识提取。
+
+### 仓库结构
 
 ```text
 save-conversation/
@@ -32,11 +36,205 @@ save-conversation/
     templates.md
 ```
 
-## Installation
+### 安装
 
-Clone this repository into your Codex skills directory.
+将仓库克隆到 Codex skills 目录：
 
-Recommended:
+```bash
+git clone https://github.com/EthanShenjj/save-conservation.git ~/.codex/skills/save-conversation
+```
+
+如果克隆到其他位置，请确保 Codex 可以发现这个 skill 文件夹，并且目录中包含 `SKILL.md`。
+
+### 首次配置
+
+使用前需要配置存储根目录。这个目录是你的知识库根目录，后续 `raw/`、`wiki/`、`memory/` 和日志都会放在这里。
+
+```bash
+python scripts/memory_store.py config init --storage-root /path/to/your/knowledge-base
+```
+
+查看当前配置：
+
+```bash
+python scripts/memory_store.py config show
+```
+
+配置示例：
+
+```json
+{
+  "storage_root": "/path/to/your/knowledge-base",
+  "default_scope": "general",
+  "created_at": "2026-07-13"
+}
+```
+
+如果 `config.json` 包含你的本地路径，请不要提交它。
+
+### 使用
+
+#### 保存当前对话
+
+在 Codex / Claude Code 中输入：
+
+```text
+save
+```
+
+Skill 会：
+
+1. 读取已配置的 `storage_root`。
+2. 判断当前对话属于全局记忆还是项目记忆。
+3. 调用 `scripts/memory_store.py target` 获取正确的 raw 路径。
+4. 写入结构化 Markdown 记忆文档。
+5. 如果同一项目同一天已有文档，则追加增量内容。
+6. 如果目标知识库有 ingest 流程，则继续执行 ingest。
+
+#### 生成统计看板
+
+输入：
+
+```text
+统计看板
+```
+
+也可以输入：
+
+```text
+内容统计
+记忆统计
+项目统计
+```
+
+Skill 会扫描 `{storage_root}/raw/` 并输出：
+
+- 项目数
+- 记忆文档数
+- 全局文档数
+- 项目分布
+- 讨论最多的项目
+- 同日增量次数
+- 最近更新
+- 高频主题
+- 回顾建议
+
+### 存储结构
+
+所有 raw 记忆文件都会保存到二级目录：
+
+```text
+raw/
+  project-name/
+    2026-07-13-short-title.md
+  general/
+    2026-07-13-short-title.md
+```
+
+全局知识保存到：
+
+```text
+raw/general/
+```
+
+项目对话保存到：
+
+```text
+raw/{project-name}/
+```
+
+### 同日增量规则
+
+如果同一项目当天已经有文档，Skill 会追加类似下面的增量小节：
+
+```markdown
+---
+
+## 增量更新：21:30 - 本轮主题
+
+### 本轮概要
+...
+```
+
+这样可以把同一项目同一天的上下文保存在一起，而不是拆成很多小文件。
+
+### 辅助脚本
+
+`scripts/memory_store.py` 提供确定性的文件系统辅助能力：
+
+```bash
+python scripts/memory_store.py config show
+python scripts/memory_store.py config init --storage-root /path/to/kb
+python scripts/memory_store.py target --storage-root /path/to/kb --scope project --project-name my-project --title "demo"
+python scripts/memory_store.py append --target /path/to/raw.md --content-file /tmp/increment.md
+python scripts/memory_store.py stats --storage-root /path/to/kb
+```
+
+脚本不会总结对话。AI 仍然负责：
+
+- 理解当前对话。
+- 提取主题、意图、行动、产出和用户反馈。
+- 避免编造没有发生过的内容。
+- 根据目标知识库执行 ingest 步骤。
+
+### 校验
+
+运行 skill 校验：
+
+```bash
+python ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py .
+```
+
+运行 Python 语法校验：
+
+```bash
+python -m py_compile scripts/memory_store.py
+```
+
+### 注意事项
+
+- 不内置任何个人默认路径。
+- 不要把 raw 文件直接写到 `raw/` 根目录。
+- 不要把明显属于项目的对话保存到 `raw/general/`。
+- 不要为同一项目同一天的连续增量内容创建很多碎片文档。
+
+## English
+
+Save Conversation is a Codex / Claude Code skill for turning useful AI conversations into a personal knowledge base.
+
+It supports two main workflows:
+
+- **Quick save**: type `save` to archive the current conversation.
+- **Memory dashboard**: type `统计看板` to review saved conversation statistics.
+
+The skill does not assume a default storage path. Each user must configure their own knowledge-base root directory before saving or generating statistics.
+
+### What It Does
+
+Save Conversation helps you build a lightweight LLM wiki from your AI collaboration history:
+
+- Reconstructs the current conversation into a structured Markdown memory document.
+- Routes global knowledge to `raw/general/`.
+- Routes project-specific conversations to `raw/{project-name}/`.
+- Appends same-project same-day updates to the existing daily document instead of creating many fragmented files.
+- Generates a statistics dashboard from saved raw memories.
+- Keeps deterministic filesystem work in `scripts/memory_store.py`, while the AI handles summarization and knowledge extraction.
+
+### Repository Structure
+
+```text
+save-conversation/
+  SKILL.md
+  scripts/
+    memory_store.py
+  references/
+    workflow.md
+    templates.md
+```
+
+### Installation
+
+Clone this repository into your Codex skills directory:
 
 ```bash
 git clone https://github.com/EthanShenjj/save-conservation.git ~/.codex/skills/save-conversation
@@ -44,7 +242,7 @@ git clone https://github.com/EthanShenjj/save-conservation.git ~/.codex/skills/s
 
 If you clone it somewhere else, make sure the skill folder is available to Codex and contains `SKILL.md`.
 
-## First-Time Configuration
+### First-Time Configuration
 
 Before using the skill, configure a storage root. This is the root directory where `raw/`, `wiki/`, `memory/`, and logs should live.
 
@@ -70,9 +268,9 @@ Example config:
 
 Do not commit your personal `config.json` if it contains local paths.
 
-## Usage
+### Usage
 
-### Save The Current Conversation
+#### Save The Current Conversation
 
 In Codex / Claude Code, type:
 
@@ -89,7 +287,7 @@ The skill will:
 5. Append same-project same-day updates when appropriate.
 6. Run the target knowledge base ingest workflow if available.
 
-### Generate A Statistics Dashboard
+#### Generate A Statistics Dashboard
 
 Type:
 
@@ -117,7 +315,7 @@ The skill will scan `{storage_root}/raw/` and report:
 - Frequent topics
 - Review suggestions
 
-## Storage Layout
+### Storage Layout
 
 All raw memory files are stored under second-level directories:
 
@@ -141,7 +339,7 @@ Project conversations go to:
 raw/{project-name}/
 ```
 
-## Same-Day Increment Rule
+### Same-Day Increment Rule
 
 If the same project already has a document for the same date, the skill appends a section like:
 
@@ -156,7 +354,7 @@ If the same project already has a document for the same date, the skill appends 
 
 This keeps one project day together instead of creating many small raw files.
 
-## Helper Script
+### Helper Script
 
 `scripts/memory_store.py` provides deterministic helpers:
 
@@ -175,7 +373,7 @@ The script does not summarize conversations. The AI is still responsible for:
 - Avoiding fabricated details.
 - Running ingest steps according to the target knowledge base.
 
-## Validation
+### Validation
 
 Run the skill validator:
 
@@ -189,7 +387,7 @@ Run Python syntax validation:
 python -m py_compile scripts/memory_store.py
 ```
 
-## Notes
+### Notes
 
 - No default personal path is built in.
 - Do not write raw files directly under `raw/`.
