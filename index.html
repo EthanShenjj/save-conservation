@@ -300,6 +300,93 @@ section { padding: 80px 24px; }
   background: var(--accent); vertical-align:middle; margin-right:8px;
 }
 
+/* ── Demo / Example ── */
+.demo-wrap { display:grid; grid-template-columns: 1fr 1fr; gap:24px; align-items:start; }
+.demo-terminal {
+  background: var(--bg-code); border:1px solid var(--border); border-radius: var(--radius);
+  overflow:hidden;
+}
+.demo-terminal .dt-header {
+  display:flex; align-items:center; gap:8px; padding:12px 16px;
+  border-bottom:1px solid var(--border); background: rgba(255,255,255,0.02);
+}
+.demo-terminal .dt-dot { width:12px; height:12px; border-radius:50%; }
+.demo-terminal .dt-title { font-size:13px; color: var(--text-dim); margin-left:8px; }
+.demo-terminal .dt-body { padding:20px; max-height:560px; overflow-y:auto; }
+.demo-terminal .dt-body::-webkit-scrollbar { width:6px; }
+.demo-terminal .dt-body::-webkit-scrollbar-thumb { background: var(--border); border-radius:3px; }
+.dt-msg { margin-bottom:16px; }
+.dt-msg .dt-role {
+  font-size:12px; font-weight:700; margin-bottom:4px; display:flex; align-items:center; gap:6px;
+}
+.dt-msg .dt-role .dt-avatar {
+  width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:11px;
+}
+.dt-msg.user .dt-role { color: var(--accent-light); }
+.dt-msg.user .dt-avatar { background: rgba(59,130,246,0.2); }
+.dt-msg.ai .dt-role { color: var(--green); }
+.dt-msg.ai .dt-avatar { background: rgba(16,185,129,0.2); }
+.dt-msg.skill .dt-role { color: var(--purple); }
+.dt-msg.skill .dt-avatar { background: rgba(139,92,246,0.2); }
+.dt-msg .dt-bubble {
+  background: var(--bg-card); border:1px solid var(--border); border-radius:10px;
+  padding:12px 16px; font-size:13.5px; line-height:1.65; color: var(--text);
+}
+.dt-msg.user .dt-bubble { border-left:3px solid var(--accent); }
+.dt-msg.ai .dt-bubble { border-left:3px solid var(--green); }
+.dt-msg.skill .dt-bubble { border-left:3px solid var(--purple); background: rgba(139,92,246,0.06); }
+.dt-msg .dt-bubble code {
+  background: var(--bg); padding:1px 6px; border-radius:4px;
+  font-family:"SF Mono","Fira Code",monospace; font-size:12.5px; color: var(--amber);
+}
+.dt-msg .dt-bubble pre {
+  background: var(--bg); border:1px solid var(--border); border-radius:6px;
+  padding:10px 12px; margin:8px 0; overflow-x:auto;
+  font-family:"SF Mono","Fira Code",monospace; font-size:12px; line-height:1.6; color: var(--text);
+}
+.dt-trigger {
+  display:inline-flex; align-items:center; gap:6px;
+  background: var(--accent); color:#fff; padding:6px 14px; border-radius:8px;
+  font-family:"SF Mono","Fira Code",monospace; font-size:13px; font-weight:600;
+}
+.dt-step-list { list-style:none; padding:0; margin:6px 0 0 0; }
+.dt-step-list li {
+  font-size:12.5px; color: var(--text-dim); padding:3px 0; display:flex; align-items:start; gap:6px;
+}
+.dt-step-list li .dt-check { color: var(--green); font-weight:700; flex-shrink:0; }
+.dt-arrow {
+  display:flex; align-items:center; justify-content:center; padding:16px 0;
+  color: var(--accent); font-size:28px;
+}
+.demo-output {
+  background: var(--bg-code); border:1px solid var(--border); border-radius: var(--radius);
+  overflow:hidden;
+}
+.demo-output .do-header {
+  display:flex; align-items:center; gap:8px; padding:12px 16px;
+  border-bottom:1px solid var(--border); background: rgba(255,255,255,0.02);
+}
+.demo-output .do-title { font-size:13px; color: var(--text-dim); margin-left:8px; }
+.demo-output .do-body { padding:0; max-height:560px; overflow-y:auto; }
+.demo-output .do-body::-webkit-scrollbar { width:6px; }
+.demo-output .do-body::-webkit-scrollbar-thumb { background: var(--border); border-radius:3px; }
+.demo-output pre {
+  padding:20px; font-family:"SF Mono","Fira Code",monospace; font-size:12.5px; line-height:1.7;
+  color: var(--text); white-space:pre-wrap; word-wrap:break-word;
+}
+.demo-output .yaml-key { color: var(--accent-light); }
+.demo-output .yaml-val { color: var(--green); }
+.demo-output .md-h { color: #fff; font-weight:600; }
+.demo-output .md-h2 { color: var(--purple); font-weight:600; }
+.demo-output .md-bullet { color: var(--amber); }
+.demo-output .md-code { color: var(--green); }
+.demo-output .md-comment { color: var(--text-dim); font-style:italic; }
+.demo-output .do-tag {
+  font-size:11px; color: var(--green); background: rgba(16,185,129,0.1);
+  padding:3px 8px; border-radius:6px; margin-left:auto;
+}
+
 /* ── Install ── */
 .install-grid { display:grid; grid-template-columns: 1fr 1fr; gap:24px; }
 .install-card {
@@ -321,7 +408,7 @@ footer .heart { color: var(--pink); }
   nav .nav-links { display:none; }
   .hero h1 { font-size: 36px; }
   .hero p.subtitle { font-size: 16px; }
-  .modes-grid, .features-grid, .storage-grid, .install-grid { grid-template-columns: 1fr; }
+  .modes-grid, .features-grid, .storage-grid, .install-grid, .demo-wrap { grid-template-columns: 1fr; }
   .dp-stats { grid-template-columns: repeat(2,1fr); }
   .section-title { font-size: 28px; }
   .workflow-wrap { padding: 28px; }
@@ -340,6 +427,7 @@ footer .heart { color: var(--pink); }
       <a href="#workflow">工作流</a>
       <a href="#storage">存储结构</a>
       <a href="#dashboard">统计看板</a>
+      <a href="#demo">使用示例</a>
       <a href="#install">快速开始</a>
     </div>
     <a href="https://github.com/EthanShenjj/save-conservation" class="nav-cta" target="_blank">GitHub</a>
@@ -644,6 +732,193 @@ footer .heart { color: var(--pink); }
 
 <span class="cmt"># 4. 统计看板：扫描 raw/ 并输出 Markdown 统计报告</span>
 <span class="kw">python</span> scripts/memory_store.py stats <span class="kw">--storage-root</span> <span class="str">/path/to/kb</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ── Demo / Example ── -->
+<section id="demo">
+  <div class="container">
+    <div class="section-tag">使用示例</div>
+    <h2 class="section-title">模拟实战：保存一次认证重构对话</h2>
+    <p class="section-desc">下面模拟一个真实场景——你在 my-app 项目中和 AI 讨论了认证模块重构，对话结束后输入 <code style="color:var(--green);background:var(--bg-code);padding:2px 8px;border-radius:4px;font-family:monospace;">save</code>，看看 Skill 如何把对话沉淀成结构化记忆文档。</p>
+    <div class="demo-wrap">
+      <!-- 左侧：模拟对话终端 -->
+      <div class="demo-terminal">
+        <div class="dt-header">
+          <div class="dt-dot" style="background:#ff5f56"></div>
+          <div class="dt-dot" style="background:#ffbd2e"></div>
+          <div class="dt-dot" style="background:#27c93f"></div>
+          <span class="dt-title">Codex — my-app 项目对话</span>
+        </div>
+        <div class="dt-body">
+          <!-- 用户消息 1 -->
+          <div class="dt-msg user">
+            <div class="dt-role"><div class="dt-avatar">U</div> 用户</div>
+            <div class="dt-bubble">
+              我的 Express 应用里认证中间件太乱了，JWT 验证逻辑散落在三个文件里。帮我重构成一个统一的 <code>authMiddleware</code>。
+            </div>
+          </div>
+          <!-- AI 回复 1 -->
+          <div class="dt-msg ai">
+            <div class="dt-role"><div class="dt-avatar">AI</div> AI</div>
+            <div class="dt-bubble">
+              好的，我先看一下当前结构。<br><br>
+              目前 <code>auth.js</code>、<code>verifyToken.js</code> 和 <code>permissions.js</code> 各持有一部分 JWT 逻辑，建议合并为：<pre>src/middleware/authMiddleware.js
+  ├─ verifyToken()    // 解码 + 过期校验
+  ├─ checkPermissions() // 角色/权限路由
+  └─ authMiddleware()   // 统一入口</pre>
+              关键决策：将 <code>jwt.verify</code> 调用集中到 <code>verifyToken()</code>，权限检查拆为独立函数便于复用。
+            </div>
+          </div>
+          <!-- 用户消息 2 -->
+          <div class="dt-msg user">
+            <div class="dt-role"><div class="dt-avatar">U</div> 用户</div>
+            <div class="dt-bubble">
+              权限检查那里，能不能加一个 <code>requiredRole</code> 参数，按需校验而不是每次全量检查？
+            </div>
+          </div>
+          <!-- AI 回复 2 -->
+          <div class="dt-msg ai">
+            <div class="dt-role"><div class="dt-avatar">AI</div> AI</div>
+            <div class="dt-bubble">
+              可以。改成可选参数模式：<code>checkPermissions(requiredRole = null)</code>，传了就校验，不传就跳过。已更新 <code>src/middleware/authMiddleware.js</code>，同时删除了旧的三个文件。
+            </div>
+          </div>
+          <!-- 用户反馈 -->
+          <div class="dt-msg user">
+            <div class="dt-role"><div class="dt-avatar">U</div> 用户</div>
+            <div class="dt-bubble">
+              完美，就这样。对了用户反馈说 token 过期后跳转登录页有延迟，顺便看一下？
+            </div>
+          </div>
+          <!-- AI 回复 3 -->
+          <div class="dt-msg ai">
+            <div class="dt-role"><div class="dt-avatar">AI</div> AI</div>
+            <div class="dt-bubble">
+              找到了，<code>verifyToken()</code> 里过期错误没有立即 <code>res.redirect</code>，而是走了 next(error) 链。已改为过期时直接返回 401 + 客户端跳转，消除延迟。
+            </div>
+          </div>
+          <!-- 触发保存 -->
+          <div class="dt-msg user">
+            <div class="dt-role"><div class="dt-avatar">U</div> 用户</div>
+            <div class="dt-bubble">
+              <span class="dt-trigger">⌨ save</span>
+            </div>
+          </div>
+          <!-- Skill 处理过程 -->
+          <div class="dt-msg skill">
+            <div class="dt-role"><div class="dt-avatar">⚡</div> Save Conversation Skill</div>
+            <div class="dt-bubble">
+              正在保存对话...<br>
+              <ul class="dt-step-list">
+                <li><span class="dt-check">✓</span> 读取配置：<code>storage_root = ~/my-knowledge-base</code></li>
+                <li><span class="dt-check">✓</span> 判断范围：当前 Git 仓库 <code>my-app</code> → project 模式</li>
+                <li><span class="dt-check">✓</span> 调用 <code>target</code>：今日无已有文档 → mode=create</li>
+                <li><span class="dt-check">✓</span> 目标路径：<code>raw/my-app/2026-08-04-auth-refactor.md</code></li>
+                <li><span class="dt-check">✓</span> 重建对话为结构化 Markdown 文档</li>
+                <li><span class="dt-check">✓</span> 写入 raw 文件</li>
+                <li><span class="dt-check">✓</span> 执行 ingest：更新实体、概念、索引、日志</li>
+              </ul>
+            </div>
+          </div>
+          <!-- Skill 汇报 -->
+          <div class="dt-msg skill">
+            <div class="dt-role"><div class="dt-avatar">✅</div> 保存完成</div>
+            <div class="dt-bubble">
+              <strong style="color:#fff">对话已保存</strong><br>
+              <strong>存储分类</strong>：<code>my-app</code><br>
+              <strong>raw 记录</strong>：<code>raw/my-app/2026-08-04-auth-refactor.md</code><br>
+              <strong>ingest 更新</strong>：实体页 [Express] [JWT] [authMiddleware]，概念页 [中间件重构] [可选参数模式]，索引已更新
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 右侧：生成的 Markdown 文档 -->
+      <div class="demo-output">
+        <div class="do-header">
+          <div class="dt-dot" style="background:#ff5f56"></div>
+          <div class="dt-dot" style="background:#ffbd2e"></div>
+          <div class="dt-dot" style="background:#27c93f"></div>
+          <span class="do-title">raw/my-app/2026-08-04-auth-refactor.md</span>
+          <span class="do-tag">● 已生成</span>
+        </div>
+        <div class="do-body">
+<pre><span class="md-comment">---</span>
+<span class="yaml-key">date</span>: <span class="yaml-val">2026-08-04</span>
+<span class="yaml-key">platform</span>: <span class="yaml-val">Codex</span>
+<span class="yaml-key">topic</span>: <span class="yaml-val">认证中间件重构</span>
+<span class="yaml-key">scope</span>: <span class="yaml-val">my-app</span>
+<span class="yaml-key">tags</span>: [<span class="yaml-val">Express</span>, <span class="yaml-val">JWT</span>, <span class="yaml-val">认证</span>, <span class="yaml-val">重构</span>, <span class="yaml-val">中间件</span>]
+<span class="md-comment">---</span>
+
+<span class="md-h"># 对话：认证中间件重构</span>
+
+<span class="md-h2">## 对话概要</span>
+在 my-app 项目中，将散落在 auth.js、verifyToken.js
+和 permissions.js 三个文件中的 JWT 认证逻辑，
+合并为统一的 authMiddleware.js。增加了按需权限
+校验参数，并修复了 token 过期后跳转延迟的问题。
+
+<span class="md-h2">## 用户意图</span>
+用户希望清理认证中间件的碎片化代码，统一入口，
+同时解决权限校验灵活性和过期跳转延迟两个实际问题。
+
+<span class="md-h2">## 对话内容</span>
+
+<span class="md-h">### Q1: 重构散落的 JWT 验证逻辑</span>
+用户提出三个文件中 JWT 逻辑混乱。AI 分析后建议合并为
+src/middleware/authMiddleware.js，包含 verifyToken()、
+checkPermissions() 和 authMiddleware() 三个函数。
+关键决策：jwt.verify 集中到 verifyToken()，权限检查
+拆为独立函数。
+
+<span class="md-h">### Q2: 增加按需权限校验</span>
+用户建议加 requiredRole 参数。AI 改为可选参数模式
+checkPermissions(requiredRole = null)，传了校验，
+不传跳过。删除旧三个文件。
+
+<span class="md-h">### Q3: 修复 token 过期跳转延迟</span>
+用户反馈过期跳转有延迟。AI 发现 verifyToken() 过期
+错误走了 next(error) 链，改为直接返回 401 + 客户端
+跳转，消除延迟。
+
+<span class="md-h2">## AI 的关键行动</span>
+<span class="md-bullet">-</span> 合并 auth.js / verifyToken.js / permissions.js
+   → src/middleware/authMiddleware.js
+<span class="md-bullet">-</span> 实现 checkPermissions(requiredRole = null)
+   可选参数模式
+<span class="md-bullet">-</span> 修复过期 token 跳转：next(error) → 直接 401
+<span class="md-bullet">-</span> 删除旧的三个碎片文件
+
+<span class="md-h2">## 关键产出</span>
+<span class="md-bullet">-</span> <span class="md-code">src/middleware/authMiddleware.js</span>
+<span class="md-bullet">-</span> 决策：jwt.verify 集中化 + 权限校验可选化
+<span class="md-bullet">-</span> 决策：过期错误即时返回而非走错误链
+
+<span class="md-h2">## 用户反馈</span>
+用户对重构方案表示满意（"完美，就这样"），
+并主动补充了 token 过期跳转延迟的问题，
+说明用户在实际使用中发现了边界 case。
+
+<span class="md-comment">---</span>
+
+<span class="md-h2">## 增量更新：21:30 - 补充测试用例</span>
+<span class="md-comment">（若同日再次 save，内容会追加到此处）</span>
+
+<span class="md-h">### 本轮概要</span>
+为 authMiddleware 补充了单元测试，覆盖过期
+token 和 requiredRole 两种场景。</pre>
+        </div>
+      </div>
+    </div>
+    <div class="dt-arrow">↓</div>
+    <div style="text-align:center; padding:20px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius);">
+      <p style="font-size:15px; color:var(--text);">
+        <strong style="color:#fff">后续操作：</strong>
+        随时输入 <code style="background:var(--bg-code);padding:3px 10px;border-radius:6px;font-family:monospace;color:var(--purple);">统计看板</code>
+        即可查看 my-app 项目的记忆文档数、增量讨论次数和高频主题，回顾重构决策和待办事项。
+      </p>
     </div>
   </div>
 </section>
