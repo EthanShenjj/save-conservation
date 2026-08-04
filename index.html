@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Save Conversation — AI 对话知识沉淀技能</title>
+<meta name="description" content="一个 Codex / Claude Code Skill，把有价值的 AI 对话沉淀成个人知识库。">
+<style>
+:root {
+  --bg: #0a0e1a;
+  --bg-card: #111729;
+  --bg-code: #0d1320;
+  --border: #1e293f;
+  --text: #c8d3e8;
+  --text-dim: #7a8ba8;
+  --accent: #3b82f6;
+  --accent-light: #60a5fa;
+  --accent-glow: rgba(59,130,246,0.15);
+  --green: #10b981;
+  --amber: #f59e0b;
+  --purple: #8b5cf6;
+  --pink: #ec4899;
+  --radius: 12px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: -apple-system, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+::selection { background: var(--accent); color: #fff; }
+
+/* ── Nav ── */
+nav {
+  position: fixed; top:0; left:0; right:0; z-index:100;
+  background: rgba(10,14,26,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 0;
+}
+nav .nav-inner {
+  max-width: 1100px; margin:0 auto; padding:0 24px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+nav .logo {
+  font-weight:700; font-size:17px; color:#fff;
+  display:flex; align-items:center; gap:8px;
+}
+nav .logo span { color: var(--accent-light); }
+nav .nav-links { display:flex; gap:28px; }
+nav .nav-links a {
+  color: var(--text-dim); text-decoration:none; font-size:14px; font-weight:500;
+  transition: color .2s;
+}
+nav .nav-links a:hover { color: #fff; }
+nav .nav-cta {
+  background: var(--accent); color:#fff; padding:8px 18px; border-radius:8px;
+  text-decoration:none; font-size:14px; font-weight:600; transition: background .2s;
+}
+nav .nav-cta:hover { background: var(--accent-light); }
+
+/* ── Hero ── */
+.hero {
+  min-height: 100vh; display:flex; align-items:center; justify-content:center;
+  position: relative; padding: 100px 24px 60px;
+  text-align: center;
+}
+.hero::before {
+  content:''; position:absolute; top:0; left:0; right:0; bottom:0;
+  background:
+    radial-gradient(ellipse 600px 400px at 50% 30%, rgba(59,130,246,0.12), transparent),
+    radial-gradient(ellipse 400px 300px at 80% 70%, rgba(139,92,246,0.08), transparent),
+    radial-gradient(ellipse 400px 300px at 20% 60%, rgba(16,185,129,0.06), transparent);
+  pointer-events:none;
+}
+.hero-content { position: relative; max-width: 760px; }
+.hero .badge {
+  display:inline-flex; align-items:center; gap:8px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  padding: 6px 16px; border-radius: 100px;
+  font-size: 13px; color: var(--accent-light); margin-bottom: 28px;
+}
+.hero .badge::before {
+  content:''; width:8px; height:8px; border-radius:50%; background: var(--green);
+  box-shadow: 0 0 8px var(--green); animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+.hero h1 {
+  font-size: 52px; font-weight:800; color:#fff; line-height:1.2; margin-bottom: 20px;
+  letter-spacing: -0.02em;
+}
+.hero h1 .grad {
+  background: linear-gradient(135deg, var(--accent-light), var(--purple), var(--pink));
+  -webkit-background-clip: text; background-clip:text;
+  -webkit-text-fill-color: transparent;
+}
+.hero p.subtitle {
+  font-size: 19px; color: var(--text-dim); margin-bottom: 36px;
+}
+.hero .cta-group { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+.hero .btn-primary {
+  background: var(--accent); color:#fff; padding:14px 32px; border-radius:10px;
+  text-decoration:none; font-weight:600; font-size:15px;
+  transition: all .2s; box-shadow: 0 4px 20px rgba(59,130,246,0.3);
+}
+.hero .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(59,130,246,0.4); }
+.hero .btn-secondary {
+  background: var(--bg-card); border: 1px solid var(--border); color: var(--text);
+  padding:14px 32px; border-radius:10px; text-decoration:none; font-weight:600; font-size:15px;
+  transition: all .2s;
+}
+.hero .btn-secondary:hover { border-color: var(--accent); color:#fff; }
+
+.hero-stats {
+  display:flex; gap:48px; justify-content:center; margin-top: 56px;
+  flex-wrap:wrap;
+}
+.hero-stat { text-align:center; }
+.hero-stat .num { font-size:32px; font-weight:800; color:#fff; }
+.hero-stat .label { font-size:13px; color: var(--text-dim); }
+
+/* ── Section base ── */
+section { padding: 80px 24px; }
+.container { max-width: 1100px; margin: 0 auto; }
+.section-tag {
+  display:inline-block; font-size:13px; font-weight:600; color: var(--accent-light);
+  text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;
+}
+.section-title {
+  font-size: 36px; font-weight:800; color:#fff; margin-bottom: 16px; letter-spacing:-0.01em;
+}
+.section-desc { font-size:17px; color: var(--text-dim); margin-bottom: 48px; max-width: 680px; }
+
+/* ── Modes ── */
+.modes-grid {
+  display:grid; grid-template-columns: 1fr 1fr; gap: 24px;
+}
+.mode-card {
+  background: var(--bg-card); border:1px solid var(--border); border-radius: var(--radius);
+  padding: 36px; position: relative; overflow: hidden; transition: border-color .3s;
+}
+.mode-card:hover { border-color: var(--accent); }
+.mode-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--purple));
+}
+.mode-card .icon {
+  width:52px; height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+  font-size:24px; margin-bottom:20px;
+}
+.mode-card.save .icon { background: rgba(59,130,246,0.15); color: var(--accent-light); }
+.mode-card.stats .icon { background: rgba(139,92,246,0.15); color: var(--purple); }
+.mode-card h3 { font-size:22px; font-weight:700; color:#fff; margin-bottom: 10px; }
+.mode-card .trigger {
+  display:inline-block; background: var(--bg-code); border:1px solid var(--border);
+  padding: 4px 12px; border-radius: 6px; font-family: "SF Mono","Fira Code",monospace;
+  font-size:13px; color: var(--green); margin-bottom: 16px;
+}
+.mode-card p { color: var(--text-dim); font-size:15px; margin-bottom: 20px; }
+.mode-card ul { list-style:none; }
+.mode-card ul li {
+  padding: 6px 0; font-size:14px; color: var(--text); display:flex; align-items:start; gap:8px;
+}
+.mode-card ul li::before {
+  content:'→'; color: var(--accent); font-weight:700; flex-shrink:0;
+}
+
+/* ── Features ── */
+.features-grid {
+  display:grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+}
+.feature-card {
+  background: var(--bg-card); border:1px solid var(--border); border-radius: var(--radius);
+  padding: 28px; transition: all .3s;
+}
+.feature-card:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+.feature-card .f-icon {
+  width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+  font-size:20px; margin-bottom:16px;
+}
+.feature-card h4 { font-size:17px; font-weight:700; color:#fff; margin-bottom:8px; }
+.feature-card p { font-size:14px; color: var(--text-dim); line-height:1.6; }
+
+.f-blue { background: rgba(59,130,246,0.12); color: var(--accent-light); }
+.f-green { background: rgba(16,185,129,0.12); color: var(--green); }
+.f-purple { background: rgba(139,92,246,0.12); color: var(--purple); }
+.f-amber { background: rgba(245,158,11,0.12); color: var(--amber); }
+.f-pink { background: rgba(236,72,153,0.12); color: var(--pink); }
+.f-cyan { background: rgba(6,182,212,0.12); color: #06b6d4; }
+
+/* ── Workflow ── */
+.workflow-wrap { background: var(--bg-card); border:1px solid var(--border); border-radius: var(--radius); padding: 48px; }
+.workflow-steps { display:flex; flex-direction:column; gap:0; }
+.wf-step {
+  display:flex; gap:24px; position:relative; padding-bottom: 32px;
+}
+.wf-step:last-child { padding-bottom:0; }
+.wf-step:not(:last-child)::before {
+  content:''; position:absolute; left:19px; top:44px; bottom:0; width:2px;
+  background: linear-gradient(180deg, var(--accent), transparent);
+}
+.wf-num {
+  width:40px; height:40px; border-radius:50%; background: var(--bg);
+  border:2px solid var(--accent); display:flex; align-items:center; justify-content:center;
+  font-weight:700; color: var(--accent-light); font-size:15px; flex-shrink:0; z-index:1;
+}
+.wf-body h5 { font-size:16px; font-weight:700; color:#fff; margin-bottom:4px; }
+.wf-body p { font-size:14px; color: var(--text-dim); }
+.wf-body code {
+  background: var(--bg-code); padding: 2px 8px; border-radius:4px;
+  font-family:"SF Mono","Fira Code",monospace; font-size:13px; color: var(--green);
+}
+
+/* ── Storage ── */
+.storage-grid { display:grid; grid-template-columns: 1fr 1fr; gap:24px; align-items:start; }
+.storage-tree {
+  background: var(--bg-code); border:1px solid var(--border); border-radius: var(--radius);
+  padding: 28px; font-family:"SF Mono","Fira Code",monospace; font-size:14px; line-height:1.9;
+  overflow-x:auto;
+}
+.storage-tree .dir { color: var(--accent-light); font-weight:600; }
+.storage-tree .file { color: var(--text); }
+.storage-tree .comment { color: var(--text-dim); font-style:italic; }
+.storage-info { padding-top: 8px; }
+.storage-info h4 { font-size:18px; color:#fff; margin-bottom:16px; }
+.storage-info .si-item {
+  display:flex; gap:12px; padding:14px 0; border-bottom:1px solid var(--border);
+}
+.storage-info .si-item:last-child { border-bottom:none; }
+.storage-info .si-icon {
+  width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+  font-size:14px; flex-shrink:0;
+}
+.storage-info .si-text h5 { font-size:15px; color:#fff; margin-bottom:2px; }
+.storage-info .si-text p { font-size:13px; color: var(--text-dim); }
+
+/* ── Code Block ── */
+.code-block {
+  background: var(--bg-code); border:1px solid var(--border); border-radius: var(--radius);
+  overflow:hidden; margin-top:16px;
+}
+.code-block .cb-header {
+  display:flex; align-items:center; gap:8px; padding:12px 16px;
+  border-bottom:1px solid var(--border); background: rgba(255,255,255,0.02);
+}
+.code-block .cb-dot { width:12px; height:12px; border-radius:50%; }
+.code-block .cb-title { font-size:13px; color: var(--text-dim); margin-left:8px; }
+.code-block pre { padding:20px; overflow-x:auto; }
+.code-block code {
+  font-family:"SF Mono","Fira Code",monospace; font-size:13.5px; line-height:1.7;
+  color: var(--text);
+}
+.code-block .kw { color: var(--pink); }
+.code-block .str { color: var(--green); }
+.code-block .cmt { color: var(--text-dim); font-style:italic; }
+.code-block .fn { color: var(--accent-light); }
+.code-block .var { color: var(--amber); }
+
+/* ── Dashboard Preview ── */
+.dashboard-preview {
+  background: var(--bg-card); border:1px solid var(--border); border-radius: var(--radius);
+  overflow:hidden;
+}
+.dp-header {
+  padding:20px 28px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.dp-header h4 { font-size:16px; color:#fff; }
+.dp-header .dp-tag {
+  font-size:12px; color: var(--green); background: rgba(16,185,129,0.1);
+  padding:4px 10px; border-radius:6px;
+}
+.dp-body { padding: 28px; }
+.dp-stats { display:grid; grid-template-columns: repeat(4,1fr); gap:16px; margin-bottom:24px; }
+.dp-stat {
+  background: var(--bg); border:1px solid var(--border); border-radius:10px; padding:18px;
+  text-align:center;
+}
+.dp-stat .dp-num { font-size:28px; font-weight:800; color:#fff; }
+.dp-stat .dp-label { font-size:12px; color: var(--text-dim); margin-top:4px; }
+.dp-table { width:100%; border-collapse:collapse; font-size:13px; }
+.dp-table th {
+  text-align:left; padding:10px 14px; color: var(--text-dim); font-weight:600;
+  border-bottom:1px solid var(--border);
+}
+.dp-table td {
+  padding:10px 14px; border-bottom:1px solid var(--border); color: var(--text);
+}
+.dp-table td:first-child { color: var(--accent-light); }
+.dp-table .bar {
+  display:inline-block; height:6px; border-radius:3px;
+  background: var(--accent); vertical-align:middle; margin-right:8px;
+}
+
+/* ── Install ── */
+.install-grid { display:grid; grid-template-columns: 1fr 1fr; gap:24px; }
+.install-card {
+  background: var(--bg-card); border:1px solid var(--border); border-radius: var(--radius); padding:28px;
+}
+.install-card h4 { font-size:17px; color:#fff; margin-bottom:6px; }
+.install-card p { font-size:14px; color: var(--text-dim); margin-bottom:16px; }
+
+/* ── Footer ── */
+footer {
+  border-top:1px solid var(--border); padding: 48px 24px; text-align:center;
+}
+footer p { font-size:14px; color: var(--text-dim); }
+footer a { color: var(--accent-light); text-decoration:none; }
+footer .heart { color: var(--pink); }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  nav .nav-links { display:none; }
+  .hero h1 { font-size: 36px; }
+  .hero p.subtitle { font-size: 16px; }
+  .modes-grid, .features-grid, .storage-grid, .install-grid { grid-template-columns: 1fr; }
+  .dp-stats { grid-template-columns: repeat(2,1fr); }
+  .section-title { font-size: 28px; }
+  .workflow-wrap { padding: 28px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Nav ── -->
+<nav>
+  <div class="nav-inner">
+    <div class="logo">💾 Save<span>Conversation</span></div>
+    <div class="nav-links">
+      <a href="#modes">工作模式</a>
+      <a href="#features">核心能力</a>
+      <a href="#workflow">工作流</a>
+      <a href="#storage">存储结构</a>
+      <a href="#dashboard">统计看板</a>
+      <a href="#install">快速开始</a>
+    </div>
+    <a href="https://github.com/EthanShenjj/save-conservation" class="nav-cta" target="_blank">GitHub</a>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<div class="hero">
+  <div class="hero-content">
+    <div class="badge">Codex / Claude Code Skill · v1.0</div>
+    <h1>把 AI 对话<br><span class="grad">沉淀成个人知识库</span></h1>
+    <p class="subtitle">一键保存有价值的 AI 协作记录，自动重建结构化 Markdown 文档，生成统计看板，让每次对话都成为可复用的知识资产。</p>
+    <div class="cta-group">
+      <a href="#install" class="btn-primary">快速开始</a>
+      <a href="#modes" class="btn-secondary">了解能力</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="num">2</div><div class="label">工作模式</div></div>
+      <div class="hero-stat"><div class="num">6</div><div class="label">核心能力</div></div>
+      <div class="hero-stat"><div class="num">4</div><div class="label">脚本命令</div></div>
+      <div class="hero-stat"><div class="num">0</div><div class="label">外部依赖</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modes ── -->
+<section id="modes">
+  <div class="container">
+    <div class="section-tag">工作模式</div>
+    <h2 class="section-title">两种模式，覆盖沉淀与回顾</h2>
+    <p class="section-desc">一个关键词触发，无需复杂配置。保存模式归档对话，统计模式回顾知识库全貌。</p>
+    <div class="modes-grid">
+      <div class="mode-card save">
+        <div class="icon">📥</div>
+        <h3>保存模式 · Save Mode</h3>
+        <div class="trigger">save · 保存对话 · 记录这次对话 · remember this</div>
+        <p>将当前对话重建成结构化 Markdown 记忆文档，自动判断归属范围，写入对应项目目录，并执行知识库 ingest 流程。</p>
+        <ul>
+          <li>读取已配置的 storage_root</li>
+          <li>判断全局记忆 or 项目记忆</li>
+          <li>调用脚本获取正确的 raw 路径</li>
+          <li>写入结构化 Markdown 文档</li>
+          <li>同日追加增量内容，避免碎片文件</li>
+          <li>执行目标知识库 ingest 流程</li>
+        </ul>
+      </div>
+      <div class="mode-card stats">
+        <div class="icon">📊</div>
+        <h3>统计模式 · Stats Mode</h3>
+        <div class="trigger">统计看板 · 内容统计 · 记忆统计 · 项目统计</div>
+        <p>扫描已保存的 raw 记忆文档，生成多维统计看板，帮你回顾知识库全貌，发现高频主题和需要复盘的项目。</p>
+        <ul>
+          <li>项目数、记忆文档数、全局文档数</li>
+          <li>项目分布与讨论热度排名</li>
+          <li>同日增量次数统计</li>
+          <li>最近 7/30 天更新趋势</li>
+          <li>高频主题自动提取</li>
+          <li>智能回顾建议</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Features ── -->
+<section id="features" style="background: rgba(255,255,255,0.015);">
+  <div class="container">
+    <div class="section-tag">核心能力</div>
+    <h2 class="section-title">六大能力，构建轻量 LLM Wiki</h2>
+    <p class="section-desc">AI 负责理解、摘要和知识提取，脚本负责确定性文件系统操作。职责分离，稳定可靠。</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="f-icon f-blue">🏗️</div>
+        <h4>结构化重建</h4>
+        <p>将对话重建成包含元数据、概要、用户意图、关键行动、关键产出、用户反馈的结构化 Markdown 文档，不是简单粘贴。</p>
+      </div>
+      <div class="feature-card">
+        <div class="f-icon f-green">📂</div>
+        <h4>智能路由</h4>
+        <p>自动判断对话属于全局知识还是项目记忆，全局保存到 <code style="color:var(--green)">raw/general/</code>，项目保存到 <code style="color:var(--green)">raw/{project}/</code>。</p>
+      </div>
+      <div class="feature-card">
+        <div class="f-icon f-purple">🔁</div>
+        <h4>同日增量</h4>
+        <p>同一项目同一天的后续对话自动追加为增量更新块，而不是创建碎片文件。保持上下文连贯，减少文件膨胀。</p>
+      </div>
+      <div class="feature-card">
+        <div class="f-icon f-amber">🏷️</div>
+        <h4>元数据提取</h4>
+        <p>自动提取日期、平台、主题、范围、标签等 YAML frontmatter，便于后续检索和统计。</p>
+      </div>
+      <div class="feature-card">
+        <div class="f-icon f-pink">📊</div>
+        <h4>统计看板</h4>
+        <p>一键生成知识库统计 Markdown 报告：项目分布、讨论热度、高频主题、近期更新、回顾建议。</p>
+      </div>
+      <div class="feature-card">
+        <div class="f-icon f-cyan">🔗</div>
+        <h4>Ingest 集成</h4>
+        <p>保存后自动执行目标知识库的 ingest 流程：实体、概念、洞察、索引、日志、持久化记忆，无缝衔接。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Workflow ── -->
+<section id="workflow">
+  <div class="container">
+    <div class="section-tag">工作流</div>
+    <h2 class="section-title">Save 模式八步流程</h2>
+    <p class="section-desc">从读取配置到 ingest 完成，全流程透明可控。</p>
+    <div class="workflow-wrap">
+      <div class="workflow-steps">
+        <div class="wf-step">
+          <div class="wf-num">1</div>
+          <div class="wf-body">
+            <h5>读取配置</h5>
+            <p>运行 <code>config show</code> 读取已配置的 <code>storage_root</code>。若配置缺失，引导用户初始化。</p>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-num">2</div>
+          <div class="wf-body">
+            <h5>判断模式</h5>
+            <p>根据用户输入判断是 Save 模式还是 Stats 模式，走不同分支。</p>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-num">3</div>
+          <div class="wf-body">
+            <h5>确定范围与项目名</h5>
+            <p>判断 <code>general</code> 或 <code>project</code>。项目名优先级：用户指定 &gt; Git 仓库名 &gt; 工作区名 &gt; 当前目录名。</p>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-num">4</div>
+          <div class="wf-body">
+            <h5>获取目标路径</h5>
+            <p>调用 <code>target</code> 命令获取 <code>mode</code>（create/append）和 <code>target_path</code>。</p>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-num">5</div>
+          <div class="wf-body">
+            <h5>重建对话记录</h5>
+            <p>按模板将对话重建为结构化 Markdown：元数据、概要、意图、Q/A 摘要、行动、产出、反馈。</p>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-num">6</div>
+          <div class="wf-body">
+            <h5>写入或追加</h5>
+            <p><code>mode=create</code> 时新建 raw 文件；<code>mode=append</code> 时通过 <code>append</code> 命令追加增量块。</p>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-num">7</div>
+          <div class="wf-body">
+            <h5>执行 Ingest</h5>
+            <p>按目标知识库的 <code>CLAUDE.md</code> 执行 ingest：sources、entities、concepts、insights、index、log、memory。</p>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-num">8</div>
+          <div class="wf-body">
+            <h5>汇报结果</h5>
+            <p>报告 raw 路径、ingest 更新内容、持久化记忆变更，完成保存。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Storage ── -->
+<section id="storage" style="background: rgba(255,255,255,0.015);">
+  <div class="container">
+    <div class="section-tag">存储结构</div>
+    <h2 class="section-title">清晰的二级目录组织</h2>
+    <p class="section-desc">所有 raw 记忆文件按项目归档，文件名包含日期和简短标题，便于检索和排序。</p>
+    <div class="storage-grid">
+      <div class="storage-tree">
+<span class="comment">storage_root/</span>
+├── <span class="dir">raw/</span>
+│   ├── <span class="dir">general/</span>                      <span class="comment"># 全局知识</span>
+│   │   ├── <span class="file">2026-07-13-react-patterns.md</span>
+│   │   └── <span class="file">2026-07-14-writing-tips.md</span>
+│   ├── <span class="dir">my-app/</span>                       <span class="comment"># 项目记忆</span>
+│   │   ├── <span class="file">2026-07-13-auth-refactor.md</span>
+│   │   └── <span class="file">2026-07-13-api-design.md</span>    <span class="comment"># 同日增量</span>
+│   └── <span class="dir">data-pipeline/</span>
+│       └── <span class="file">2026-07-14-etl-optimization.md</span>
+├── <span class="dir">wiki/</span>                             <span class="comment"># 知识库页面</span>
+│   ├── <span class="file">index.md</span>
+│   ├── <span class="file">log.md</span>
+│   └── <span class="dir">entities/</span>
+├── <span class="dir">memory/</span>                           <span class="comment"># 持久化记忆</span>
+└── <span class="file">config.json</span>                       <span class="comment"># 配置文件</span>
+      </div>
+      <div class="storage-info">
+        <h4>存储规则</h4>
+        <div class="si-item">
+          <div class="si-icon f-blue">🌍</div>
+          <div class="si-text">
+            <h5>全局知识 → raw/general/</h5>
+            <p>跨项目通用知识、个人偏好、工作风格等</p>
+          </div>
+        </div>
+        <div class="si-item">
+          <div class="si-icon f-green">📦</div>
+          <div class="si-text">
+            <h5>项目记忆 → raw/{project}/</h5>
+            <p>特定仓库、产品、功能、调试会话等</p>
+          </div>
+        </div>
+        <div class="si-item">
+          <div class="si-icon f-purple">🔁</div>
+          <div class="si-text">
+            <h5>同日增量追加</h5>
+            <p>同项目同日已有文档时，追加增量块而非新建文件</p>
+          </div>
+        </div>
+        <div class="si-item">
+          <div class="si-icon f-amber">⚠️</div>
+          <div class="si-text">
+            <h5>不写根目录</h5>
+            <p>raw 文件不直接写到 raw/ 根目录，必须归入二级目录</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Dashboard ── -->
+<section id="dashboard">
+  <div class="container">
+    <div class="section-tag">统计看板</div>
+    <h2 class="section-title">一键生成知识库全景报告</h2>
+    <p class="section-desc">输入「统计看板」，自动扫描 raw 目录并输出多维统计 Markdown。以下是看板效果预览：</p>
+    <div class="dashboard-preview">
+      <div class="dp-header">
+        <h4>📋 记忆统计看板</h4>
+        <div class="dp-tag">● 实时生成</div>
+      </div>
+      <div class="dp-body">
+        <div class="dp-stats">
+          <div class="dp-stat"><div class="dp-num">5</div><div class="dp-label">项目数</div></div>
+          <div class="dp-stat"><div class="dp-num">42</div><div class="dp-label">记忆文档</div></div>
+          <div class="dp-stat"><div class="dp-num">8</div><div class="dp-label">全局文档</div></div>
+          <div class="dp-stat"><div class="dp-num">15</div><div class="dp-label">增量讨论</div></div>
+        </div>
+        <table class="dp-table">
+          <thead>
+            <tr><th>项目</th><th>文档数</th><th>增量讨论</th><th>最近更新</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>my-app</td><td><span class="bar" style="width:60px"></span>14</td><td>6</td><td>2026-08-03</td></tr>
+            <tr><td>data-pipeline</td><td><span class="bar" style="width:45px"></span>10</td><td>4</td><td>2026-08-01</td></tr>
+            <tr><td>blog-engine</td><td><span class="bar" style="width:30px"></span>7</td><td>3</td><td>2026-07-28</td></tr>
+            <tr><td>cli-tool</td><td><span class="bar" style="width:12px"></span>3</td><td>2</td><td>2026-07-20</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:20px; padding:16px; background:var(--bg); border-radius:10px; border:1px solid var(--border);">
+          <p style="font-size:13px; color:var(--text-dim); margin-bottom:8px;">💡 <strong style="color:#fff">回顾建议</strong></p>
+          <p style="font-size:13px; color:var(--text-dim);">优先回顾 <code style="color:var(--accent-light)">my-app</code>，它是当前最活跃的项目。查看最近 7 天更新，补充还没有沉淀成原则或复用流程的内容。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Script Commands ── -->
+<section id="commands" style="background: rgba(255,255,255,0.015);">
+  <div class="container">
+    <div class="section-tag">辅助脚本</div>
+    <h2 class="section-title">memory_store.py 四大命令</h2>
+    <p class="section-desc">确定性文件系统逻辑封装在 Python 脚本中，AI 只负责摘要和知识提取，职责清晰。</p>
+    <div class="code-block">
+      <div class="cb-header">
+        <div class="cb-dot" style="background:#ff5f56"></div>
+        <div class="cb-dot" style="background:#ffbd2e"></div>
+        <div class="cb-dot" style="background:#27c93f"></div>
+        <span class="cb-title">memory_store.py — 命令一览</span>
+      </div>
+      <pre><code><span class="cmt"># 1. 配置管理：读取或初始化 storage_root</span>
+<span class="kw">python</span> scripts/memory_store.py config show
+<span class="kw">python</span> scripts/memory_store.py config init <span class="kw">--storage-root</span> <span class="str">/path/to/kb</span>
+
+<span class="cmt"># 2. 目标路由：计算 raw 路径，判断新建或同日追加</span>
+<span class="kw">python</span> scripts/memory_store.py target \
+  <span class="kw">--storage-root</span> <span class="str">/path/to/kb</span> \
+  <span class="kw">--scope</span> <span class="str">project</span> \
+  <span class="kw">--project-name</span> <span class="str">my-project</span> \
+  <span class="kw">--title</span> <span class="str">"demo"</span> \
+  <span class="kw">--date</span> <span class="str">2026-07-13</span>
+
+<span class="cmt"># 3. 增量追加：将准备好的 Markdown 追加到已有 raw 文档</span>
+<span class="kw">python</span> scripts/memory_store.py append \
+  <span class="kw">--target</span> <span class="str">/path/to/raw.md</span> \
+  <span class="kw">--content-file</span> <span class="str">/tmp/increment.md</span>
+
+<span class="cmt"># 4. 统计看板：扫描 raw/ 并输出 Markdown 统计报告</span>
+<span class="kw">python</span> scripts/memory_store.py stats <span class="kw">--storage-root</span> <span class="str">/path/to/kb</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ── Install ── -->
+<section id="install">
+  <div class="container">
+    <div class="section-tag">快速开始</div>
+    <h2 class="section-title">三步上手</h2>
+    <p class="section-desc">克隆仓库、配置路径、开始保存。零外部依赖，纯 Python 标准库实现。</p>
+    <div class="install-grid">
+      <div class="install-card">
+        <h4>① 克隆安装</h4>
+        <p>将仓库克隆到 Codex skills 目录</p>
+        <div class="code-block">
+          <div class="cb-header">
+            <div class="cb-dot" style="background:#ff5f56"></div>
+            <div class="cb-dot" style="background:#ffbd2e"></div>
+            <div class="cb-dot" style="background:#27c93f"></div>
+            <span class="cb-title">bash</span>
+          </div>
+          <pre><code><span class="kw">git</span> clone https://github.com/EthanShenjj/save-conservation.git \
+  ~/.codex/skills/save-conversation</code></pre>
+        </div>
+      </div>
+      <div class="install-card">
+        <h4>② 配置存储路径</h4>
+        <p>设置你的知识库根目录</p>
+        <div class="code-block">
+          <div class="cb-header">
+            <div class="cb-dot" style="background:#ff5f56"></div>
+            <div class="cb-dot" style="background:#ffbd2e"></div>
+            <div class="cb-dot" style="background:#27c93f"></div>
+            <span class="cb-title">bash</span>
+          </div>
+          <pre><code><span class="kw">python</span> scripts/memory_store.py config init \
+  <span class="kw">--storage-root</span> <span class="str">~/my-knowledge-base</span></code></pre>
+        </div>
+      </div>
+    </div>
+    <div class="install-card" style="margin-top:24px;">
+      <h4>③ 开始使用</h4>
+      <p>在 Codex / Claude Code 中输入关键词即可触发</p>
+      <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
+        <div style="background:var(--bg-code); border:1px solid var(--border); padding:8px 16px; border-radius:8px; font-family:'SF Mono',monospace; font-size:14px; color:var(--green);">save → 保存当前对话</div>
+        <div style="background:var(--bg-code); border:1px solid var(--border); padding:8px 16px; border-radius:8px; font-family:'SF Mono',monospace; font-size:14px; color:var(--purple);">统计看板 → 生成统计报告</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="container">
+    <p>Save Conversation · <a href="https://github.com/EthanShenjj/save-conservation" target="_blank">GitHub</a> · MIT License</p>
+    <p style="margin-top:8px;">Built with <span class="heart">♥</span> for knowledge workers who value every conversation</p>
+  </div>
+</footer>
+
+</body>
+</html>
