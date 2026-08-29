@@ -22,6 +22,7 @@ Save Conversation 可以帮助你把 AI 协作记录变成一个轻量的 LLM Wi
 - 将全局知识保存到 `raw/general/`。
 - 将项目相关对话保存到 `raw/{project-name}/`。
 - 同一项目同一天的后续内容会追加到当天文档，避免生成很多碎片文件。
+- 同日遇到明确独立的主题时，可创建不覆盖已有内容的独立文档。
 - 从已有 raw 记忆中生成统计看板。
 - 将确定性的文件系统逻辑封装在 `scripts/memory_store.py`，AI 负责总结和知识提取。
 
@@ -161,6 +162,12 @@ raw/{project-name}/
 
 这样可以把同一项目同一天的上下文保存在一起，而不是拆成很多小文件。
 
+如果当天出现确实独立的新主题，保存流程会使用 `--force-new` 创建另一个文件；脚本会自动避免覆盖同名文件。
+
+### 敏感信息与失败恢复
+
+保存前会默认脱敏明显的密钥、令牌、密码、Cookie 与证件号。只有在风险提示后用户明确确认时，才会原样写入。raw 文件写入成功即代表保存成功；后续知识库 ingest 失败时，原始记录会保留，并在报告中说明失败步骤与重试方式。
+
 ### 辅助脚本
 
 `scripts/memory_store.py` 提供确定性的文件系统辅助能力：
@@ -169,6 +176,7 @@ raw/{project-name}/
 python scripts/memory_store.py config show
 python scripts/memory_store.py config init --storage-root /path/to/kb
 python scripts/memory_store.py target --storage-root /path/to/kb --scope project --project-name my-project --title "demo"
+python scripts/memory_store.py target --storage-root /path/to/kb --scope project --project-name my-project --title "new-topic" --force-new
 python scripts/memory_store.py append --target /path/to/raw.md --content-file /tmp/increment.md
 python scripts/memory_store.py stats --storage-root /path/to/kb
 ```
@@ -220,6 +228,7 @@ Save Conversation helps you build a lightweight LLM wiki from your AI collaborat
 - Routes global knowledge to `raw/general/`.
 - Routes project-specific conversations to `raw/{project-name}/`.
 - Appends same-project same-day updates to the existing daily document instead of creating many fragmented files.
+- Creates a separate, non-overwriting document for a clearly independent same-day topic.
 - Generates a statistics dashboard from saved raw memories.
 - Keeps deterministic filesystem work in `scripts/memory_store.py`, while the AI handles summarization and knowledge extraction.
 
@@ -289,6 +298,8 @@ The skill will:
 4. Write a structured Markdown memory document.
 5. Append same-project same-day updates when appropriate.
 6. Run the target knowledge base ingest workflow if available.
+
+For a clearly independent same-day topic, use `--force-new` when resolving the target. The helper will avoid overwriting an existing file.
 
 #### Generate A Statistics Dashboard
 
@@ -365,6 +376,7 @@ This keeps one project day together instead of creating many small raw files.
 python scripts/memory_store.py config show
 python scripts/memory_store.py config init --storage-root /path/to/kb
 python scripts/memory_store.py target --storage-root /path/to/kb --scope project --project-name my-project --title "demo"
+python scripts/memory_store.py target --storage-root /path/to/kb --scope project --project-name my-project --title "new-topic" --force-new
 python scripts/memory_store.py append --target /path/to/raw.md --content-file /tmp/increment.md
 python scripts/memory_store.py stats --storage-root /path/to/kb
 ```

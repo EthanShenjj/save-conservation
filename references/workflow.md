@@ -14,7 +14,7 @@ Use this reference for the LLM-owned parts of the workflow: reconstructing the c
    - Current Git repo root name.
    - Current workspace root name.
    - Current directory name.
-5. Ask the helper for the target:
+5. Ask the helper for the target. If the same-day discussion is clearly independent, add `--force-new`; this creates a separate, non-overwriting raw document:
    ```bash
    python scripts/memory_store.py target \
      --storage-root <root> \
@@ -23,14 +23,15 @@ Use this reference for the LLM-owned parts of the workflow: reconstructing the c
      --title <short-title> \
      --date YYYY-MM-DD
    ```
-6. 判断保存粒度：默认按 `references/templates.md` 重建结构化摘要；用户明确要求完整保留、全部保留、逐字保存或等效表达时，改用其中的完整原文模板。
+6. 判断保存粒度：默认按 `references/templates.md` 重建结构化摘要；用户明确要求完整保留、全部保留、逐字保存或等效表达时，改用其中的完整原文模板。若 `mode=append`，使用对应的增量模板。
 7. If helper returns `mode=create`, write a new raw file at `target_path`.
 8. If helper returns `mode=append`, write an increment block to a temporary file and append it with:
    ```bash
    python scripts/memory_store.py append --target <target_path> --content-file <tmp-md>
    ```
-9. Run the target knowledge base ingest workflow described in its own `CLAUDE.md`, if present.
-10. Report storage classification, raw path, ingest updates, and persistent memory changes.
+9. Before writing, detect obvious secrets, access tokens, passwords, cookies, and identity-document numbers. Mask them by default. Preserve them only after the user explicitly confirms that the sensitive values should be stored verbatim.
+10. Run the target knowledge base ingest workflow described in its own `CLAUDE.md`, if present. A successful raw write is a successful save; if ingest fails, retain the raw record, report the failed step and error, and give the user a retry command or next step.
+11. Report storage classification, raw path, ingest updates, any ingest failures, and persistent memory changes.
 
 ## Statistics Mode
 
@@ -51,6 +52,7 @@ The helper does not summarize conversations or infer user intent. The LLM must s
 - Extract the topic, tags, user intent, key actions, key outputs, and user feedback.
 - Avoid fabricating content that did not occur.
 - When the user explicitly requests a complete transcript, preserve all available user messages, assistant replies, tool calls, and tool results in chronological order. Do not summarize, omit, or paraphrase the transcript.
+- Complete preservation does not override the default sensitive-data masking rule; obtain explicit confirmation before writing sensitive values verbatim.
 - Preserve important file paths, commands, decisions, errors, and corrections.
 - Decide whether a same-day project conversation is genuinely a different topic that deserves a new document. The default should be append.
 - Execute ingest judgment: entities, concepts, insights, index/log updates, and persistent memory.
@@ -61,4 +63,5 @@ The helper does not summarize conversations or infer user intent. The LLM must s
 - Never assume a default storage root. Use only the configured `storage_root`.
 - Do not run stats as a write operation.
 - Do not create many same-project same-day raw files for continuous incremental work.
+- Use `--force-new` only for a clearly independent same-day topic; never let a new document overwrite an existing raw file.
 - If the target knowledge base lacks `CLAUDE.md`, write the raw file and report that ingest instructions were unavailable.

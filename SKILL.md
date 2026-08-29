@@ -49,7 +49,7 @@ python scripts/memory_store.py config show
 使用 `scripts/memory_store.py` 处理确定性文件系统逻辑：
 
 - `config show|init`：读取或初始化配置。
-- `target`：创建 raw 目录、规范化项目名、判断新建或同日追加。
+- `target`：创建 raw 目录、规范化项目名、判断新建或同日追加；使用 `--force-new` 可为同日不同主题创建独立记录。
 - `append`：把准备好的增量 Markdown 追加到已有 raw 文档。
 - `stats`：扫描 `{storage_root}/raw/` 并输出统计看板 Markdown。
 
@@ -63,6 +63,8 @@ python scripts/memory_store.py target \
   --title <简短标题> \
   --date YYYY-MM-DD
 ```
+
+当同一项目当天的话题明显独立，调用 `target` 时加 `--force-new`。脚本会生成不覆盖已有文件的路径。
 
 脚本只负责机械逻辑；对话摘要、意图判断、实体/概念/洞察提取仍由 Codex 完成。
 
@@ -87,7 +89,7 @@ raw/
 3. 当前工作区根目录名称。
 4. 当前所在目录名称。
 
-同一项目同一天已有 raw 文档时，默认追加为 `## 增量更新：HH:mm - {本轮主题}`。只有当前对话明显是同一项目内完全不同主题、追加会让文档混乱时，才新建新的当天文档。
+同一项目同一天已有 raw 文档时，默认追加为 `## 增量更新：HH:mm - {本轮主题}`。只有当前对话明显是同一项目内完全不同主题、追加会让文档混乱时，才通过 `target --force-new` 新建独立文档。
 
 ## Workflow
 
@@ -99,16 +101,18 @@ raw/
 2. 判断 save mode 或 stats mode。
 3. Stats mode：运行 `python scripts/memory_store.py stats --storage-root <root>`，返回 Markdown。
 4. Save mode：判断 `general` 或 `project`，并确定项目名。
-5. 运行 `target` 获取 `mode` 和 `target_path`。
-6. 按模板重建对话记录；`mode=create` 时新建 raw，`mode=append` 时追加增量块。
-7. 写入后按目标知识库 `CLAUDE.md` 执行 ingest：sources、entities、concepts、insights、index、log、memory。
-8. 汇报 raw 路径、ingest 更新和持久化记忆。
+5. 运行 `target` 获取 `mode` 和 `target_path`；同日独立主题加 `--force-new`。
+6. 按模板重建对话记录；`mode=create` 时新建 raw，`mode=append` 时追加相应的摘要或完整原文增量块。
+7. 写入前检查明显的密钥、令牌、密码、Cookie、身份证件号等敏感值；默认脱敏。只有用户在风险提示后明确要求原样保存时，才保留这些值。
+8. 写入后按目标知识库 `CLAUDE.md` 执行 ingest：sources、entities、concepts、insights、index、log、memory。raw 写入成功即视为保存成功；ingest 失败时保留 raw、说明失败项与错误，并提供重试入口。
+9. 汇报 raw 路径、ingest 更新、失败项（如有）和持久化记忆。
 
 ## Required Writing Behavior
 
 - 全中文输出元数据、注释、摘要和标签；对话原文可以保留原语言。
 - 默认不要逐字抄整段聊天，但必须保留工具调用、文件路径、错误、决策、用户纠正和关键产出。
 - 用户明确要求完整保留时，完整原文优先于默认摘要规则；在 `## 完整对话原文` 下按实际消息顺序写入全部可获得内容。
+- 完整保留不等于静默保存敏感信息：先脱敏；用户确认原样保存后才保留敏感值。
 - 用户反馈很重要：记录用户纠正了什么、肯定了什么、补充了什么。
 - 不要编造对话中没发生的内容。
 

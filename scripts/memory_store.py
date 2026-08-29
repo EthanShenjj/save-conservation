@@ -23,6 +23,9 @@ from typing import Any
 CONFIG_NAME = "config.json"
 DATE_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})-")
 INCREMENT_RE = re.compile(r"^##\s+增量更新：", re.MULTILINE)
+TRANSCRIPT_INCREMENT_RE = re.compile(r"^##\s+完整对话原文增量：", re.MULTILINE)
+TRANSCRIPT_SECTION_RE = re.compile(r"^##\s+完整对话原文", re.MULTILINE)
+MESSAGE_RE = re.compile(r"^###\s+(?:用户|助手|工具调用|工具结果)\s*$", re.MULTILINE)
 TOPIC_RE = re.compile(r"^topic:\s*(.+)$", re.MULTILINE)
 TAGS_RE = re.compile(r"^tags:\s*\[(.*?)\]\s*$", re.MULTILINE)
 H1_RE = re.compile(r"^#\s+(.+)$", re.MULTILINE)
@@ -135,6 +138,18 @@ def choose_today_file(raw_dir: Path, day: str, title: str | None = None) -> tupl
     return files[0], files
 
 
+def available_path(raw_dir: Path, day: str, title_slug: str) -> Path:
+    candidate = raw_dir / f"{day}-{title_slug}.md"
+    if not candidate.exists():
+        return candidate
+    index = 2
+    while True:
+        candidate = raw_dir / f"{day}-{title_slug}-{index}.md"
+        if not candidate.exists():
+            return candidate
+        index += 1
+
+
 def cmd_config(args: argparse.Namespace) -> None:
     path = config_path(Path(args.skill_dir), args.config)
     if args.action == "show":
@@ -163,12 +178,12 @@ def cmd_target(args: argparse.Namespace) -> None:
     day = args.date or today_str()
     title_slug = kebab_title(args.title or "conversation")
     selected, today_files = choose_today_file(raw_dir, day, args.title)
-    if scope == "project" and selected:
+    if scope == "project" and selected and not args.force_new:
         mode = "append"
         target = selected
     else:
         mode = "create"
-        target = raw_dir / f"{day}-{title_slug}.md"
+        target = available_path(raw_dir, day, title_slug)
     emit(
         {
             "ok": True,
@@ -201,6 +216,10 @@ class RawDoc:
     date: str | None
     title: str
     increments: int
+    transcript_increments: int
+    transcript_sections: int
+    message_blocks: int
+    characters: int
     mtime: datetime
     tags: list[str]
 
@@ -230,6 +249,10 @@ def collect_docs(storage_root: Path) -> tuple[list[RawDoc], int]:
                     date=date_from_name(path),
                     title=infer_title(path, text),
                     increments=len(INCREMENT_RE.findall(text)),
+                    transcript_increments=len(TRANSCRIPT_INCREMENT_RE.findall(text)),
+                    transcript_sections=len(TRANSCRIPT_SECTION_RE.findall(text)),
+                    message_blocks=len(MESSAGE_RE.findall(text)),
+                    characters=len(text),
                     mtime=datetime.fromtimestamp(path.stat().st_mtime),
                     tags=extract_tags(text),
                 )
@@ -267,12 +290,16 @@ def cmd_stats(args: argparse.Namespace) -> None:
     now = datetime.now()
     recent_7 = sum(1 for d in docs if d.mtime >= now - timedelta(days=7))
     recent_30 = sum(1 for d in docs if d.mtime >= now - timedelta(days=30))
+    transcript_docs = sum(1 for d in docs if d.transcript_sections)
+    transcript_increments = sum(d.transcript_increments for d in docs)
+    message_blocks = sum(d.message_blocks for d in docs)
+    characters = sum(d.characters for d in docs)
     rows = []
     for project, items in by_project.items():
         if project == "general":
             continue
         latest = max(items, key=lambda d: d.mtime)
-        rows.append((project, len(items), sum(d.increments for d in items), latest.mtime.date().isoformat()))
+        rows.append((project, len(items), sum(d.increments + d.transcript_increments for d in items), latest.mtime.date().isoformat()))
     rows.sort(key=lambda r: (r[1] + r[2], r[3]), reverse=True)
     most_active = rows[0] if rows else ("无", 0, 0, "")
     recent_docs = sorted(docs, key=lambda d: d.mtime, reverse=True)[: args.recent_limit]
@@ -283,6 +310,8 @@ def cmd_stats(args: argparse.Namespace) -> None:
     print(f"- 项目数：{len(projects)}")
     print(f"- 记忆文档：{len(docs)}")
     print(f"- 全局文档：{general_count}")
+    print(f"- 原始内容字符数：{characters}")
+    print(f"- 完整对话记录：{transcript_docs}，完整对话增量：{transcript_increments}，消息块：{message_blocks}")
     print(f"- 时间范围：{dates[0] if dates else '未知'} 至 {dates[-1] if dates else '未知'}")
     print(f"- 最近 7 天新增/更新：{recent_7}")
     print(f"- 最近 30 天新增/更新：{recent_30}\n")
@@ -328,6 +357,7 @@ def build_parser() -> argparse.ArgumentParser:
     target.add_argument("--project-name")
     target.add_argument("--title", required=True)
     target.add_argument("--date")
+    target.add_argument("--force-new", action="store_true", help="create a separate same-day document")
     target.set_defaults(func=cmd_target)
 
     append = sub.add_parser("append", help="append prepared markdown to an existing raw file")
