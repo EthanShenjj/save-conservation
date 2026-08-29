@@ -23,7 +23,7 @@ Use this reference for the LLM-owned parts of the workflow: reconstructing the c
      --title <short-title> \
      --date YYYY-MM-DD
    ```
-6. Reconstruct the current conversation into the raw template from `references/templates.md`.
+6. 判断保存粒度：默认按 `references/templates.md` 重建结构化摘要；用户明确要求完整保留、全部保留、逐字保存或等效表达时，改用其中的完整原文模板。
 7. If helper returns `mode=create`, write a new raw file at `target_path`.
 8. If helper returns `mode=append`, write an increment block to a temporary file and append it with:
    ```bash
@@ -50,6 +50,7 @@ The helper does not summarize conversations or infer user intent. The LLM must s
 
 - Extract the topic, tags, user intent, key actions, key outputs, and user feedback.
 - Avoid fabricating content that did not occur.
+- When the user explicitly requests a complete transcript, preserve all available user messages, assistant replies, tool calls, and tool results in chronological order. Do not summarize, omit, or paraphrase the transcript.
 - Preserve important file paths, commands, decisions, errors, and corrections.
 - Decide whether a same-day project conversation is genuinely a different topic that deserves a new document. The default should be append.
 - Execute ingest judgment: entities, concepts, insights, index/log updates, and persistent memory.

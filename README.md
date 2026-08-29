@@ -18,6 +18,7 @@ Save Conversation 是一个 Codex / Claude Code Skill，用来把有价值的 AI
 Save Conversation 可以帮助你把 AI 协作记录变成一个轻量的 LLM Wiki：
 
 - 将当前对话重建成结构化 Markdown 记忆文档。
+- 用户明确要求时，完整保留当前对话的可获得原文（含用户消息、助手回复与工具记录）。
 - 将全局知识保存到 `raw/general/`。
 - 将项目相关对话保存到 `raw/{project-name}/`。
 - 同一项目同一天的后续内容会追加到当天文档，避免生成很多碎片文件。
@@ -90,6 +91,8 @@ Skill 会：
 4. 写入结构化 Markdown 记忆文档。
 5. 如果同一项目同一天已有文档，则追加增量内容。
 6. 如果目标知识库有 ingest 流程，则继续执行 ingest。
+
+如果用户在保存请求中明确说“完整保留对话”“保留全部内容”或“逐字保存”，Skill 会以消息发生顺序写入完整原文，而非仅写结构化摘要。
 
 #### 生成统计看板
 
@@ -393,4 +396,3 @@ python -m py_compile scripts/memory_store.py
 - Do not write raw files directly under `raw/`.
 - Do not save project conversations into `raw/general/`.
 - Do not create many same-project same-day raw files for incremental work.
-
