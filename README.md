@@ -63,16 +63,3 @@ python scripts/memory_store.py stats --storage-root /path/to/kb
 ```
 
 脚本只处理路径、追加和统计；对话理解、摘要、原文整理以及知识库 ingest 由 AI 按 [SKILL.md](SKILL.md) 和 [工作流](references/workflow.md) 执行。
-
-## 开发校验
-
-```bash
-python ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py .
-python -m py_compile scripts/memory_store.py
-```
-
-不要提交包含个人本机路径的 `config.json`。
-
-## English
-
-Save Conversation is a Codex / Claude Code skill for archiving useful conversations into a personal knowledge base. Configure a storage root, use `save` to archive the current conversation, and use `统计看板` for a dashboard. See [SKILL.md](SKILL.md) for the complete workflow and guardrails.
