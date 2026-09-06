@@ -9,6 +9,9 @@
 - 全局内容保存到 `raw/general/`，项目内容保存到 `raw/{project}/`。
 - 同一项目同日默认追加；明确是独立主题时使用 `--force-new` 创建不覆盖已有文件的新记录。
 - 输入 `统计看板`、`内容统计`、`记忆统计` 或 `项目统计`，查看已有记录的项目分布、更新情况和主题统计。
+<img width="1672" height="941" alt="image" src="https://github.com/user-attachments/assets/babdc1ff-ce46-46c0-91fc-072ddeab3342" />
+<img width="1691" height="930" alt="image" src="https://github.com/user-attachments/assets/60780a45-ea10-4cd8-bc19-fff536aee1c8" />
+
 
 ## 快速开始
 
